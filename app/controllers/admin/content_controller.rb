@@ -47,7 +47,7 @@ class Admin::ContentController < Admin::BaseController
     @id = params[:id]
     @article = Article.find_by_id(@id)
     
-    @second_article_id = params[:second_article_id]
+    @second_article_id = params[:merge_with]
     @second_article = Article.find_by_id(@second_article_id)
     
     if @id == @second_article_id
@@ -56,6 +56,8 @@ class Admin::ContentController < Admin::BaseController
     end
     
     if @article.nil? or @second_article.nil?
+      logger.info "article? #{@article}"
+      logger.info "2nd? #{@second_article}"
       flash[:error] = "The second article you specified does not exist!"
       redirect_to :action => 'index' and return
     end
