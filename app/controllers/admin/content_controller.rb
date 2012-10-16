@@ -50,7 +50,7 @@ class Admin::ContentController < Admin::BaseController
     @second_article_id = params[:second_article_id]
     @second_article = Article.find_by_id(@second_article_id)
     
-    if @main_id == @second_article_id
+    if @id == @second_article_id
       flash[:error] = "You cannot merge an article with itself!"
       redirect_to :action => 'index' and return
     end
