@@ -122,22 +122,6 @@ class Article < Content
 
   end
 
-  def merge_body(second_article)
-    second_article_body = second_article.body
-    new_body = self.body + "\r\n\r\n" + second_article_body
-    self.body = new_body
-    self.save
-    
-  end
-  
-  def merge_comments(second_article)
-    comments = second_article.comments
-    comments.each do |comment|
-      comment.article_id = self.id
-      comment.save
-    end
-  end
-
   def year_url
     published_at.year.to_s
   end
@@ -430,6 +414,22 @@ class Article < Content
 
   def access_by?(user)
     user.admin? || user_id == user.id
+  end
+
+  def merge_comments(second_article)
+    comments = second_article.comments
+    comments.each do |comment|
+      comment.article_id = self.id
+      comment.save
+    end
+  end
+
+  def merge_content(second_article)
+    second_article_body = second_article.body
+    combined_body = self.body + "\r\n\r\n" + second_article_body
+    self.body = combined_body
+    self.save
+
   end
 
   protected
