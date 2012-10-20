@@ -17,7 +17,10 @@ module NavigationHelpers
       '/'
     when /^the new article page$/
       '/admin/content/new'
-
+    when /^the view page for "(.*)"/
+      '/:published_at/:permalink'
+    when /^the edit page for "(.*)"/
+      '/admin/content/edit/:id'
     # Add more mappings here.
     # Here is an example that pulls values out of the Regexp:
     #

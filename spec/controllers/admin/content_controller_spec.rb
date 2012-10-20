@@ -48,7 +48,7 @@ describe Admin::ContentController do
       response.should render_template('index')
       response.should be_success
     end
-    
+
     it 'should restrict to withdrawn articles' do
       article = Factory(:article, :state => 'withdrawn', :published_at => '2010-01-01')
       get :index, :search => {:state => 'withdrawn'}
@@ -56,7 +56,7 @@ describe Admin::ContentController do
       response.should render_template('index')
       response.should be_success
     end
-  
+
     it 'should restrict to withdrawn articles' do
       article = Factory(:article, :state => 'withdrawn', :published_at => '2010-01-01')
       get :index, :search => {:state => 'withdrawn'}
@@ -621,6 +621,76 @@ describe Admin::ContentController do
     it_should_behave_like 'index action'
     it_should_behave_like 'new action'
     it_should_behave_like 'destroy action'
+
+    describe 'merge articles' do
+
+      before :each do
+        @article = Factory(:article, :user => @user, :id => '12')
+        @other_article = Factory(:article, :user => @user, :id => '20')
+      end
+
+      it 'should grab the id of the current article' do
+        post :merge, :id => '1'
+        assigns(:id).should equal(1)
+      end
+
+      it 'should grab the id of the other article to merge' do
+        post :merge, :other_article_id => '2'
+        assigns(:other_article_id).should equal(2)
+      end
+
+      it 'should call the model method to find the current article' do
+        Article.should_receive(:find_by_id).with('1')
+        post :merge, :id => '1'
+      end
+
+      it 'should call the model method to find the other article' do
+        Article.should_receive(:find_by_id).with('1')
+        Article.should_receive(:find_by_id).with('2')
+        post :merge, :id=>'1', :other_article_id => '2'
+      end
+
+      it 'should display a warning and redirect to index when trying to merge an article with itself' do
+        Article.stub(:find_by_id).with('1')
+        Article.stub(:find_by_id).with('1')
+        post :merge, :id=>'1', :other_article_id => '1'
+        flash[:error].should_not be_nil
+        response.should redirect_to :action=>'index'
+      end
+
+      it 'should display an warning and redirect to index when other article is nil' do
+        Article.stub(:find_by_id).with('1')
+        Article.stub(:find_by_id).with('2').and_return(nil)
+        post :merge, :id=>'1', :other_article_id => '2'
+        flash[:error].should_not be_nil
+        response.should redirect_to :action=>'index'
+      end
+
+      it 'should call the model method to merge the article bodies' do
+        Article.stub(:find_by_id).with('1').and_return(@article)
+        Article.stub(:find_by_id).with('2').and_return(@other_article)
+        @article.should_receive(:merge_body).with(@other_article)
+        @article.stub(:merge_comments)
+        post :merge, :id => '1', :other_article_id => '2'
+      end
+
+      it 'should call the model method to merge the article comments' do
+        Article.stub(:find_by_id).with('1').and_return(@article)
+        Article.stub(:find_by_id).with('2').and_return(@other_article)
+        @article.should_receive(:merge_comments).with(@other_article)
+        @article.stub(:merge_body)
+        post :merge, :id => '1', :other_article_id => '2'
+      end
+
+      it 'should destroy the other article after merging' do
+        Article.stub(:find_by_id).with('1').and_return(@article)
+        Article.stub(:find_by_id).with('2').and_return(@other_article)
+        @article.should_receive(:merge_body).with(@other_article)
+        @article.should_receive(:merge_comments).with(@other_article)
+        @other_article.should_receive(:destroy)
+        post :merge, :id => '1', :other_article_id => '2'
+      end
+    end
 
     describe 'edit action' do
 

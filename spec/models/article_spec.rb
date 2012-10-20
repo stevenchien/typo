@@ -14,6 +14,37 @@ describe Article do
     @articles = []
   end
 
+  describe "merging bodies of two articles" do
+    before :each do
+      @article = Factory(:article, :id => '12', :body => "article body")
+      @other_article = Factory(:article, :id => '20', :body => "other article body")
+    end
+
+    it 'should correctly save the merged bodies' do
+      merged_body = @article.body + "\r\n\r\n" + @other_article.body
+      @article.merge_body(@other_article)
+      @article.body.should == merged_body
+    end
+
+  end
+
+  describe 'merging comments of two articles' do
+    before :each do
+      @article = Factory(:article, :id => '12')
+      @other_article = Factory(:article, :id => '20')
+      @comment1 = Factory(:comment, :id=>'1', :article_id => '12')
+      @comment2 = Factory(:comment, :id=>'2', :article_id => '12')
+      @comment3 = Factory(:comment, :id=>'3', :article_id => '12')
+      @comment4 = Factory(:comment, :id=>'4', :article_id => '20')
+      @comment5 = Factory(:comment, :id=>'5', :article_id => '20')
+    end
+
+    it 'should correctly save the merged comments' do
+      @article.merge_comments(@other_article)
+      @article.comments.length.should == 5
+    end
+  end
+
   def assert_results_are(*expected)
     assert_equal expected.size, @articles.size
     expected.each do |i|
@@ -184,25 +215,25 @@ describe Article do
   ### XXX: Should we have a test here?
   it "test_send_multiple_pings" do
   end
-  
+
   describe "Testing redirects" do
     it "a new published article gets a redirect" do
       a = Article.create(:title => "Some title", :body => "some text", :published => true)
       a.redirects.first.should_not be_nil
       a.redirects.first.to_path.should == a.permalink_url
     end
-    
-    it "a new unpublished article should not get a redirect" do 
+
+    it "a new unpublished article should not get a redirect" do
       a = Article.create(:title => "Some title", :body => "some text", :published => false)
       a.redirects.first.should be_nil
     end
-    
+
     it "Changin a published article permalink url should only change the to redirection" do
       a = Article.create(:title => "Some title", :body => "some text", :published => true)
       a.redirects.first.should_not be_nil
       a.redirects.first.to_path.should == a.permalink_url
       r  = a.redirects.first.from_path
-      
+
       a.permalink = "some-new-permalink"
       a.save
       a.redirects.first.should_not be_nil
@@ -571,7 +602,7 @@ describe Article do
     describe "#find_by_permalink" do
       it "uses UTC to determine correct day" do
         @a.save
-        a = Article.find_by_permalink :year => 2011, :month => 2, :day => 21, :permalink => 'a-big-article' 
+        a = Article.find_by_permalink :year => 2011, :month => 2, :day => 21, :permalink => 'a-big-article'
         a.should == @a
       end
     end
@@ -592,7 +623,7 @@ describe Article do
     describe "#find_by_permalink" do
       it "uses UTC to determine correct day" do
         @a.save
-        a = Article.find_by_permalink :year => 2011, :month => 2, :day => 22, :permalink => 'a-big-article' 
+        a = Article.find_by_permalink :year => 2011, :month => 2, :day => 22, :permalink => 'a-big-article'
         a.should == @a
       end
     end
