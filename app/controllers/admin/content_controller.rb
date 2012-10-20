@@ -37,6 +37,40 @@ class Admin::ContentController < Admin::BaseController
     new_or_edit
   end
 
+  def merge
+    
+    unless current_user.profile.label == "admin"
+      flash[:error] = "You cannot perform this action!"
+      redirect_to :action => 'index' and return
+    end
+    
+    @second_article_id = params[:merge_with]
+    @second_article = Article.find_by_id(@second_article_id)
+
+    @id = params[:id]
+    @article = Article.find_by_id(@id)
+
+    if @article.nil? or @second_article.nil?
+      logger.info "article? #{@article}"
+      logger.info "2nd? #{@second_article}"
+      flash[:error] = "The second article you specified does not exist!"
+      redirect_to :action => 'index' and return
+    end
+    
+
+    if @id == @second_article_id
+      flash[:error] = "You cannot merge an article with itself!"
+      redirect_to :action => 'index' and return
+    end
+
+    @article.merge_comments(@second_article)    
+    @article.merge_content(@second_article)
+    @second_article = Article.find_by_id(@second_article_id)
+    @second_article.destroy
+    
+    redirect_to :action => 'index' and return
+  end
+
   def destroy
     @record = Article.find(params[:id])
 
